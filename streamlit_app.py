@@ -1,100 +1,69 @@
-import io
-import torch
-import requests
 import streamlit as st
-from PIL import Image
-from transformers import VisionEncoderDecoderModel, ViTFeatureExtractor, AutoTokenizer
+from gradio_client import Client, file
+import warnings
+import os
 
-#кэшируем модели для разспознавания
-@st.cache_data
-def load_model():
-    return VisionEncoderDecoderModel.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
-@st.cache_data
-def load_feature_extractor():
-    return ViTFeatureExtractor.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
-@st.cache_data
-def load_tokenizer():
-    return AutoTokenizer.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
+# Настройки предупреждений
+warnings.filterwarnings("ignore", category=FutureWarning)
 
-# Функция распознавания объектов на изображении
-def predict_step(image):
-  images = []
-  if image.mode != "RGB":
-     image = image.convert(mode="RGB")
-  images.append(image)
-  pixel_values = feature_extractor(images=images, return_tensors="pt").pixel_values
-  pixel_values = pixel_values.to(device)
-  output_ids = model.generate(pixel_values, **gen_kwargs)
-  preds = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
-  preds = [pred.strip() for pred in preds]
-  return preds
 
-# Функция обращения к API переводчика
-def translate(payload, API_URL):
-	response = requests.post(API_URL, headers=headers, json=payload )
-	return response.json
+@st.cache_resource
+def get_client():
+    # Загружаем токен из переменной окружения
+    haggi_token = os.getenv("HUGGING_FACE_TOKEN")
 
-# Функция загрузки ихображения через Streamlit
-def load_image():
-    uploaded_file = st.file_uploader(label='Загрузите изображение:')
-    if uploaded_file is not None:
-        image_data = uploaded_file.getvalue()
-        st.image(image_data)
-        return Image.open(io.BytesIO(image_data))
-    else:
+    if not haggi_token:
+        raise ValueError("Токен не найден. Убедитесь, что переменная окружения HUGGING_FACE_TOKEN установлена.")
+
+    # Инициализация клиента
+    return Client("big-vision/paligemma")
+
+
+# Используем кэшированный клиент
+client = get_client()
+
+
+def analyze_image(image_path, prompt):
+    try:
+        result = client.predict(
+            file(image_path),
+            prompt,
+            "paligemma-3b-mix-448",  # Модель
+            "greedy",  # Алгоритм декодирования
+            api_name="/compute"
+        )
+        token_value = result[0]['value'][0]['token']
+        return token_value
+    except Exception as e:
+        st.error(f"Ошибка: {str(e)}")
         return None
 
-# Фукнция вызова отображения переводов
-def print_predictions(preds):
-    for cl in preds:
-        #st.write(str(cl).replace('_'," "))
-        en_text=str(cl).replace('_'," ")
-        trans_ta = translate({"inputs":  [">>rus<< "+en_text,  ">>deu<< "+en_text, ],
-                             "parameters":{ "src_lang":"en", "tgt_lang":"ru_RU"}
-                             }, API_URL_ta)
-        sleep_duration = 5
-        tr_test=tuple(trans_ta())
-        st.write('рус.: ', str(tr_test[0]["translation_text"]))
-        st.write('нем.: ', str(tr_test[1]["translation_text"]))
-        #for tt in tr_test:
-        #    st.write(str(tt['translation_text']))
+
+def main():
+    st.title("Распознавание изображении - Paligemma от Google")
+
+    st.write("Загрузите изображение и введите текстовый промпт для анализа.")
+
+    # Форма загрузки файла
+    uploaded_file = st.file_uploader("Загрузите изображение", type=["jpg", "jpeg", "png"])
+    prompt = st.text_input("Введите текстовый промпт")
+
+    if st.button("Распознать"):
+        if uploaded_file and prompt:
+            # Сохранение загруженного файла
+            temp_file_path = f"uploaded_image.jpg"
+            with open(temp_file_path, "wb") as f:
+                f.write(uploaded_file.getvalue())
+
+            # Анализ изображения
+            st.write("Обрабатываем изображение...")
+            token_value = analyze_image(temp_file_path, prompt)
+
+            if token_value:
+                st.success(f"На фотографии: {token_value}")
+        else:
+            st.error("Пожалуйста, загрузите изображение и введите промпт.")
 
 
-st.title('Распознавание изоброжения с переводом')
-model = load_model()
-feature_extractor = load_feature_extractor()
-tokenizer=load_tokenizer()
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model.to(device)
-max_length = 16
-num_beams = 4
-gen_kwargs = {"max_length": max_length, "num_beams": num_beams}
-
-API_URL_ta = "https://api-inference.huggingface.co/models/Helsinki-NLP/opus-mt-en-mul"
-headers = {"Authorization": f"Bearer {'HuggingFace_toker'}"}
-
-#Тестовое изображение
-#url = "http://images.cocodataset.org/val2017/000000039769.jpg"
-#with Image.open(requests.get(url, stream=True).raw) as image1:
-#    st.image(image1)
-#    preds = predict_step(image1)
-#    st.write(preds)
-#    print_predictions(preds)
-
-im=load_image()
-sleep_duration = 0.5
-result = st.button('Распознать и перевести:')
-if result:
-   preds = predict_step(im)
-   st.write('**На картинке:**')
-   st.write('анг.: ', str(preds[0]))
-   print_predictions(preds)
-
-
-completion = client.chat.completions.create(
-    model="meta-llama/Llama-3.2-11B-Vision-Instruct",
-	messages=messages,
-	max_tokens=500
-)
-
-print(completion.choices[0].message)
+if __name__ == "__main__":
+    main()
