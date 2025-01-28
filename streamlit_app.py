@@ -1,5 +1,5 @@
-import streamlit as st
-from gradio_client import Client, file
+import streamlit as st # type: ignore
+from gradio_client import Client, file # type: ignore
 import warnings
 import os
 
