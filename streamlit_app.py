@@ -60,7 +60,7 @@ def print_predictions(preds):
         #    st.write(str(tt['translation_text']))
 
 
-st.title('Распознавание объектов с переводом на разные языки')
+st.title('Распознавание изоброжения с переводом')
 model = load_model()
 feature_extractor = load_feature_extractor()
 tokenizer=load_tokenizer()
