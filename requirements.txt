@@ -1,4 +1,5 @@
 tokenizers
+torch
 sentencepiece
 tf_keras
 tensorflow==2.12.0
