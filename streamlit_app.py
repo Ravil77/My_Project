@@ -42,7 +42,7 @@ def analyze_image(image_path, prompt):
 def main():
     st.title("Распознавание изображении")
 
-    st.write("Загрузите изображение и введите переводчик для анализа.")
+    st.write("Загрузите изображение и введите перевод для анализа.")
 
     # Форма загрузки файла
     uploaded_file = st.file_uploader("Загрузите изображение", type=["jpg", "jpeg", "png"])
