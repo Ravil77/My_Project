@@ -1,5 +1,6 @@
 import streamlit as st # type: ignore
 from gradio_client import Client, file # type: ignore
+import multipart
 import warnings
 import os
 

@@ -1,5 +1,5 @@
 streamlit
 gradio_client
-importlib.util
+python-multipart
 warnings
 os
