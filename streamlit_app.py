@@ -12,7 +12,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 @st.cache_resource
 def get_client():
     # Загружаем токен из переменной окружения
-    haggi_token = os.getenv(HUGGING_FACE_TOKEN)
+    haggi_token = os.getenv(HUGGING)
 
     if not haggi_token:
         raise ValueError("Токен не найден. Убедитесь, что переменная окружения HUGGING_FACE_TOKEN установлена.")
