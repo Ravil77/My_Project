@@ -39,7 +39,7 @@ def analyze_image(image_path, prompt):
 
 
 def main():
-    st.title("Распознавание изображении")
+    st.title("Распознавание изображения")
 
     st.write("Загрузите изображение и введите перевод для анализа.")
 
