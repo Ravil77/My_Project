@@ -7,7 +7,7 @@ import os
 # Настройки предупреждений
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-HUGGING_FACE_TOKEN=""
+
 
 @st.cache_resource
 def get_client():
