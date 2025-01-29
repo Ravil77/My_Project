@@ -18,7 +18,6 @@ def get_client():
     # Инициализация клиента
     return Client("big-vision/paligemma")
 
-
 # Используем кэшированный клиент
 client = get_client()
 
