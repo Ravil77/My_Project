@@ -7,15 +7,13 @@ import os
 # Настройки предупреждений
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-
-
 @st.cache_resource
 def get_client():
     # Загружаем токен из переменной окружения
     haggi_token = os.getenv("HUGGING")
 
     if not haggi_token:
-        raise ValueError("Токен не найден. Убедитесь, что переменная окружения HUGGING_FACE_TOKEN установлена.")
+        raise ValueError("Токен не найден. Убедитесь, что переменная окружения HUGGING установлена.")
 
     # Инициализация клиента
     return Client("big-vision/paligemma")
@@ -42,13 +40,13 @@ def analyze_image(image_path, prompt):
 
 
 def main():
-    st.title("Распознавание изображении - Paligemma от Google")
+    st.title("Распознавание изображении")
 
-    st.write("Загрузите изображение и введите текстовый промпт для анализа.")
+    st.write("Загрузите изображение и введите переводчик для анализа.")
 
     # Форма загрузки файла
     uploaded_file = st.file_uploader("Загрузите изображение", type=["jpg", "jpeg", "png"])
-    prompt = st.text_input("Введите текстовый промпт")
+    prompt = st.text_input("Введите текст")
 
     if st.button("Распознать"):
         if uploaded_file and prompt:
